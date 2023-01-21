@@ -9,12 +9,41 @@ print(filepaths)
 
 # Read all files and load into python in the form of pandas dataframe
 for filepath in filepaths:
-    df = pd.read_excel(filepath, sheet_name='Sheet 1')
     # For each iteration: create a pdf document using FPDF
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()  # Add page to the pdf
+    
     filename = Path(filepath).stem # Extract part of filename using pathlib/Path. Stem: extract name minus extension
     invoice_nr = filename.split('-')[0] # Extracts the first part/item of list/name 
     pdf.set_font(family='Times', size=16, style='B')
-    pdf.cell(w=50, h=8, txt=f'Invoice nr. {invoice_nr}') # Add content to each page
-    pdf.output(f'PDFs/{filename}.pdf')  
+    pdf.cell(w=50, h=8, txt=f'Invoice nr. {invoice_nr}', ln=1) # Add content to each page
+   
+    date = filename.split('-')[1]
+    pdf.set_font(family='Times', size=16, style='B')
+    pdf.cell(w=50, h=8, txt=f'Date {date}', ln=1)
+
+    df = pd.read_excel(filepath, sheet_name='Sheet 1')
+    # Add header to pdf
+    columns = df.columns
+    columns = [item.replace("_", " ").title() for item in columns]
+
+    pdf.set_font(family='Times', size=10, style='b')
+    pdf.set_text_color(80, 80, 80)
+    pdf.cell(w=30, h=8, txt=columns[0], border=1) # Print 1. cell under product_id
+    pdf.cell(w=70, h=8, txt=columns[1], border=1) # To the right of the above cell
+    pdf.cell(w=30, h=8, txt=columns[2], border=1)
+    pdf.cell(w=30, h=8, txt=columns[3], border=1)
+    pdf.cell(w=30, h=8, txt=columns[4], border=1, ln=1)
+    
+    # Add rows to pdfs
+    for index, row in df.iterrows(): # To iterate over dataframes
+        pdf.set_font(family='Times', size=10)
+        pdf.set_text_color(80, 80, 80)
+        pdf.cell(w=30, h=8, txt=str(row['product_id']), border=1) # Print 1. cell under product_id
+        pdf.cell(w=70, h=8, txt=str(row['product_name']), border=1) # To the right of the above cell
+        pdf.cell(w=30, h=8, txt=str(row['amount_purchased']), border=1)
+        pdf.cell(w=30, h=8, txt=str(row['price_per_unit']), border=1)
+        pdf.cell(w=30, h=8, txt=str(row['total_price']), border=1, ln=1)
+          
+
+    pdf.output(f'PDFs/{filename}.pdf') 
